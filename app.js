@@ -8,7 +8,8 @@ if (!process.env.GCS_PROJECT || !process.env.GCS_KEY_FILENAME || !process.env.GC
 
 let restify = require('restify')
     ,healthcheck = require('healthcheck-middleware')
-    ,fs = require('fs');
+    ,storage = require('@google-cloud/storage')
+    ,uuid = require('uuid');
 
 let port = process.env.PORT || 8080;
 
@@ -17,15 +18,46 @@ const server = restify.createServer({
   version: '1.0.0'
 });
 
+let gcs = storage({
+    projectId: process.env.GCS_PROJEC,
+    keyFilename: process.env.GCS_KEY_FILENAME
+});
+
+let bucket = gcs.bucket(process.env.GCS_BUCKET);
+bucket.acl.default.add({
+    entity: "allUsers",
+    role: storage.acl.READER_ROLE
+}, err => {})
+
+let uploadToGoogle = (buffer, fileName, callback) => {
+    let s = stream.createReadStream(buffer);
+
+    let ws = bucket.file(fileName).createWriteStream();
+    s.pipe(ws);
+
+    ws.on('finish', () => {
+        callback();
+    })
+
+    ws.on('error', (err) => {
+        callback(err);
+    })
+}
+
 server.get('/healthz',healthcheck())
 
 server.put('/upload', function (req, res, next) {
-    req.pipe(fs.createWriteStream('test.png'))
-    req.once('end', () => {
-        console.log('saved')
-        res.json(200,{status:"ok",message:"Image uploaded"})
-    })
-    next();
+    let imageName = uuid.v4().concat('.png')
+    let ws = bucket.file(imageName).createWriteStream();
+
+
+    req.pipe(ws.on('finish', () => {
+        res.json(200,{status:"ok",imageName:imageName})
+        next();
+    }).on('error', err => {
+        res.json(400,err)
+        next();
+    }))
 });
 
 server.listen(port, function () {
