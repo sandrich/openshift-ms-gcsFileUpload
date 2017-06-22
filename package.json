@@ -1,0 +1,22 @@
+{
+  "homepage": "https://github.com/un1x86/openshift-ms-gcsFileUpload",
+  "license": "MIT",
+  "main": "app.js",
+  "maintainers": [
+    {
+      "name": "un1x86",
+      "email": "mail@chrissandrini.ch"
+    }
+  ],
+  "name": "openshift-ms-gcsFileUpload",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:un1x86/openshift-ms-gcsFileUpload.git"
+  },
+  "dependencies": {
+    "restify": "^4.3.0"
+  }
+}
