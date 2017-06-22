@@ -17,6 +17,7 @@
     "url": "git@github.com:un1x86/openshift-ms-gcsFileUpload.git"
   },
   "dependencies": {
+    "healthcheck-middleware": "git+https://github.com/un1x86/healthcheck-middleware.git",
     "restify": "^4.3.0"
   }
 }
