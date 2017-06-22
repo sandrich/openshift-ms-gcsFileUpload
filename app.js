@@ -18,6 +18,8 @@ const server = restify.createServer({
   version: '1.0.0'
 });
 
+server.use(restify.queryParser());
+
 let gcs = storage({
     projectId: process.env.GCS_PROJEC,
     keyFilename: process.env.GCS_KEY_FILENAME
@@ -47,12 +49,17 @@ let uploadToGoogle = (buffer, fileName, callback) => {
 server.get('/healthz',healthcheck())
 
 server.put('/upload', function (req, res, next) {
-    let imageName = uuid.v4().concat('.png')
-    let ws = bucket.file(imageName).createWriteStream();
+    let fileName = uuid.v4()
 
+    if (req.query && req.query.fileName)
+        fileName = req.query.fileName
+    else if (req.query && !req.query.fileName && req.query.fileExtension)
+        fileName += req.query.fileExtension
+
+    let ws = bucket.file(fileName).createWriteStream();
 
     req.pipe(ws.on('finish', () => {
-        res.json(200,{status:"ok",imageName:imageName})
+        res.json(200,{status:"ok",fileName:fileName})
         next();
     }).on('error', err => {
         res.json(400,err)
